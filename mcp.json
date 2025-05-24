@@ -1,0 +1,27 @@
+{
+  "mcpServers": {
+    "crawl4ai-rag": {
+      "transport": "sse",
+      "url": "http://localhost:8051/sse"
+    },
+    "supabase": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@supabase/mcp-server-supabase@latest",
+        "--access-token",
+        "sbp_c0822d4423c652594afae71c22fa592059ed22ca"
+      ]
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "@modelcontextprotocol/server-brave-search"
+      ],
+      "env": {
+        "BRAVE_API_KEY": "BSAQ_oQLHDcoWVOpkv0X4xIOvU0lMAW"
+      }
+    }
+  }
+}
