@@ -1,105 +1,127 @@
 """
 ingest_data.py
 
-Script to ingest sports psychology documents from the ./docs directory, convert them to Markdown using MarkItDown, split them into 500-character chunks (no overlap), generate embeddings using OpenAI, and store them in Supabase PGVector via LangChain.
+Script to ingest all documents in the /docs directory, convert to Markdown (if needed), chunk with overlap, embed using OpenAI, and store in Supabase PGVector via LangChain.
 
-Usage:
-    python ingest_data.py
+Usage: python ingest_data.py
 
-Environment Variables Required:
-    OPENAI_API_KEY
-    SUPABASE_PG_CONNECTION_STRING
+Environment variables required (see .env):
+- OPENAI_API_KEY
+- SUPABASE_URL
+- SUPABASE_SERVICE_KEY (or DB connection string)
 
+Follows project conventions and best practices.
 """
 
 import os
+from pathlib import Path
+from typing import List
 from dotenv import load_dotenv
-from markitdown import MarkItDown
-from langchain_community.embeddings import OpenAIEmbeddings
+from langchain_community.document_loaders import TextLoader, UnstructuredMarkdownLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
 from langchain_community.vectorstores.pgvector import PGVector
-from langchain.docstore.document import Document
+
+# Load environment variables
+load_dotenv()
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_SERVICE_KEY = os.getenv("SUPABASE_SERVICE_KEY")
+SUPABASE_PG_CONN_STRING = os.getenv("SUPABASE_PG_CONNECTION_STRING")
+
+DOCS_DIR = Path("docs")
+CHUNK_SIZE = 800
+CHUNK_OVERLAP = 200
 
 
-def convert_to_markdown(file_path: str) -> str:
+def get_all_doc_paths(docs_dir: Path) -> List[Path]:
     """
-    Converts a file to Markdown using MarkItDown.
+    Recursively get all text/markdown files in the docs directory.
 
     Args:
-        file_path (str): Path to the file.
+        docs_dir (Path): Path to the docs directory.
+
+    Returns:
+        List[Path]: List of file paths.
+    """
+    return [p for p in docs_dir.rglob("*") if p.is_file() and p.suffix in {".md", ".txt"}]
+
+
+def load_and_convert_to_markdown(file_path: Path) -> str:
+    """
+    Load a file and convert to Markdown if needed.
+
+    Args:
+        file_path (Path): Path to the file.
 
     Returns:
         str: Markdown content.
     """
-    try:
-        md = MarkItDown()
-        result = md.convert(file_path)
-        return result.text_content
-    except Exception as e:
-        print(f"[WARN] Could not convert {file_path} to Markdown: {e}")
-        return ""
+    if file_path.suffix == ".md":
+        loader = UnstructuredMarkdownLoader(str(file_path))
+    else:
+        loader = TextLoader(str(file_path))
+    docs = loader.load()
+    return docs[0].page_content if docs else ""
 
-def chunk_markdown(md_text: str, chunk_size: int = 500) -> list:
+
+def chunk_document(text: str) -> List[str]:
     """
-    Splits Markdown text into chunks of specified size.
+    Chunk a document using RecursiveCharacterTextSplitter with overlap.
 
     Args:
-        md_text (str): Markdown content.
-        chunk_size (int): Size of each chunk.
+        text (str): The document text.
 
     Returns:
-        list: List of Markdown chunks.
+        List[str]: List of text chunks.
     """
-    return [md_text[i:i+chunk_size] for i in range(0, len(md_text), chunk_size) if md_text[i:i+chunk_size].strip()]
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=CHUNK_SIZE,
+        chunk_overlap=CHUNK_OVERLAP,
+        separators=["\n\n", "\n", ".", "!", "?", " "]
+    )
+    return splitter.split_text(text)
+
 
 def main():
     """
-    Main ingestion workflow: converts, chunks, embeds, and stores documents.
+    Main ingestion workflow: load, convert, chunk, embed, and store documents.
     """
-    load_dotenv()
-    docs_path = './docs'
-    supported_exts = ('.pdf', '.docx', '.pptx', '.xlsx', '.html', '.htm', '.txt', '.md', '.csv', '.epub')
-    files = [os.path.join(docs_path, f) for f in os.listdir(docs_path) if f.lower().endswith(supported_exts)]
-    if not files:
-        print(f"No supported documents found in {docs_path}. Exiting.")
-        return
+    if not OPENAI_API_KEY or not SUPABASE_URL or not SUPABASE_SERVICE_KEY:
+        raise EnvironmentError("Missing required environment variables. Check .env file.")
 
+    doc_paths = get_all_doc_paths(DOCS_DIR)
     all_chunks = []
-    for file_path in files:
-        print(f"Converting {file_path} to Markdown...")
-        md_text = convert_to_markdown(file_path)
-        if not md_text.strip():
+    metadatas = []
+
+    for path in doc_paths:
+        print(f"Processing {path}...")
+        markdown = load_and_convert_to_markdown(path)
+        if not markdown.strip():
+            print(f"Warning: {path} is empty or could not be loaded.")
             continue
-        chunks = chunk_markdown(md_text, chunk_size=500)
-        print(f"  - {len(chunks)} chunks created from {os.path.basename(file_path)}")
-        for chunk in chunks:
-            # Best practice: ensure metadata is a JSON-serializable dict (not JSONB)
-            # Note: PGVector will store this as JSON, not JSONB, for compatibility and easier migration.
-            all_chunks.append(Document(page_content=chunk, metadata={"source": str(os.path.basename(file_path))}))
+        chunks = chunk_document(markdown)
+        all_chunks.extend(chunks)
+        metadatas.extend([{"source": str(path), "chunk": i} for i in range(len(chunks))])
 
-    if not all_chunks:
-        print("No content to ingest after conversion and chunking. Exiting.")
-        return
+    print(f"Total chunks to embed: {len(all_chunks)}")
 
-    # Set up OpenAI embeddings
-    openai_api_key = os.getenv("OPENAI_API_KEY")
-    if not openai_api_key:
-        raise ValueError("OPENAI_API_KEY not set in environment.")
-    embeddings = OpenAIEmbeddings(openai_api_key=openai_api_key)
-
-    # Set up PGVector connection
-    pg_conn_str = os.getenv("SUPABASE_PG_CONNECTION_STRING")
-    if not pg_conn_str:
-        raise ValueError("SUPABASE_PG_CONNECTION_STRING not set in environment.")
-
-    # Store in PGVector
-    print(f"Storing {len(all_chunks)} chunks in Supabase PGVector...")
-    db = PGVector.from_documents(
-        all_chunks,
-        embeddings,
-        connection_string=pg_conn_str,
-        collection_name="sports_psych_docs"
+    # Set up embeddings and vector store
+    embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+    # Prefer full connection string from env if provided
+    if SUPABASE_PG_CONN_STRING:
+        connection_string = SUPABASE_PG_CONN_STRING
+    else:
+        connection_string = f"postgresql+psycopg2://postgres:{SUPABASE_SERVICE_KEY}@{SUPABASE_URL.replace('https://', '').replace('.supabase.co', '.supabase.co:5432')}/postgres"
+    vectorstore = PGVector(
+        connection_string=connection_string,
+        collection_name="sports_psychology_docs",
+        embedding_function=embeddings,
     )
-    print("Ingestion complete. Documents stored in Supabase PGVector.")
+
+    # Add to vector store
+    vectorstore.add_texts(all_chunks, metadatas=metadatas)
+    print("Ingestion complete.")
 
 
 if __name__ == "__main__":

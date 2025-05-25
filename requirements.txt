@@ -10,3 +10,6 @@ elevenlabs
 pydantic
 langchain-postgres
 pydantic-settings
+unstructured
+markdown
+prompt_toolkit
