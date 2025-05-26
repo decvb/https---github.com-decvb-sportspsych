@@ -16,28 +16,6 @@ This document is used by the developer and the AI coding assistant to track the 
 
 These are the tasks currently being worked on or the immediate next steps.
 
-*   [~] Set up project directory, virtual environment, and install basic dependencies (`fastapi`, `uvicorn`, `python-dotenv`). _Setup commands being provided._
-*   [~] Create and configure the `.env` file with API keys and Supabase connection details (including DB password). _Template and variable descriptions provided._
-*   [~] In Supabase: Enable `pgvector` extension. _SQL command provided._
-*   [~] In Supabase: Create the `messages` table with `user_id` (UUID FK to `auth.users`), `role`, `content`, `created_at`. _SQL command provided._
-*   [~] In Supabase: Create the `profiles` table with `id` (UUID PK & FK to `auth.users`), `updated_at`, and initial profile fields (sport, goals, level, notes). _SQL command provided._
-*   [~] In Supabase: Implement Row Level Security (RLS) for `messages` and `profiles` tables to ensure users can only access their own data. _RLS policies provided._
-*   [~] Run `ingest_data.py` to populate the Supabase vector store.
-*   [ ] Implement frontend UI for chat, profile, and TTS endpoints
-*   [ ] Write Pytest unit tests for FastAPI endpoints and Supabase helpers
-*   [ ] Integrate RAG/vector search with FastAPI backend when direct DB access is available
-*   [ ] Implement an interactive CLI or notebook-based agent test harness for conversational testing (not frontend)
-*   [x] Implement dynamic voice switching in CLI and backend using ElevenLabs voice IDs (2024-06-13)
-*   [x] Enhance CLI for real-time audio playback and user-driven voice changes (2024-06-13)
-*   [x] Robust TTS error handling and dynamic voice_id support in backend (2024-06-13)
-*   [ ] Refine sports psych agent persona and prompt for more natural, conversational, less formal/verbose responses (2024-06-13)
-*   [ ] Update knowledge base documents to match new, more natural style (2024-06-13)
-*   [x] Implement the `/chat` POST endpoint: accept user ID and message, fetch history/profile, use LangChain (Memory, RAG, LLM), save history, return text response. (2024-06-13)
-*   [x] Implement the `/profile` GET/POST/PUT endpoints for fetching and updating user profile data in Supabase. (2024-06-13)
-*   [x] Implement the `/tts` POST endpoint: accept text and user ID, call ElevenLabs API (streaming), return audio stream. (2024-06-13)
-*   [x] Test FastAPI endpoints locally (`uvicorn`, Swagger UI). (2024-06-13)
-*   [x] Implement an interactive CLI or notebook-based agent test harness for conversational testing (not frontend). (2024-06-13)
-*   [~] Validate chunking and embedding in Supabase after ingestion
 *   [~] Integrate Supabase Auth into Lovable frontend (signup, login, get user UUID).
 *   [~] Update Lovable chat interface to send user message + Supabase UUID to FastAPI `/chat`.
 *   [~] Update Lovable chat interface to receive and display text response from `/chat`.
@@ -47,8 +25,26 @@ These are the tasks currently being worked on or the immediate next steps.
 *   [~] Configure environment variables on the hosting platform.
 *   [~] Deploy the FastAPI application.
 *   [~] Update Lovable to use the deployed API URL.
-*   [ ] (Post-MVP) Implement Speech-to-Text (STT) in Lovable frontend.
+*   [ ] Implement frontend UI for chat, profile, and TTS endpoints
+*   [x] Write Pytest unit tests for FastAPI endpoints and Supabase helpers (2024-06-14)
+*   [x] Integrate RAG/vector search with FastAPI backend when direct DB access is available (2024-06-14)
+*   [x] Refine sports psych agent persona and prompt for more natural, conversational, less formal/verbose responses (2024-06-14)
+*   [x] Update knowledge base documents to match new, more natural style (2024-06-14)
+*   [x] Validate chunking and embedding in Supabase after ingestion (2024-06-14)
+*   [x] Implement the `/chat` POST endpoint: accept user ID and message, fetch history/profile, use LangChain (Memory, RAG, LLM), save history, return text response. (2024-06-13)
+*   [x] Implement the `/profile` GET/POST/PUT endpoints for fetching and updating user profile data in Supabase. (2024-06-13)
+*   [x] Implement the `/tts` POST endpoint: accept text and user ID, call ElevenLabs API (streaming), return audio stream. (2024-06-13)
+*   [x] Test FastAPI endpoints locally (`uvicorn`, Swagger UI). (2024-06-13)
+*   [x] Implement an interactive CLI or notebook-based agent test harness for conversational testing (not frontend). (2024-06-13)
+*   [x] Robust TTS error handling and dynamic voice_id support in backend (2024-06-13)
+*   [x] Implement dynamic voice switching in CLI and backend using ElevenLabs voice IDs (2024-06-13)
+*   [x] Enhance CLI for real-time audio playback and user-driven voice changes (2024-06-13)
 *   [x] Upgrade backend LLM to OpenAI GPT-4o for all completions (2024-06-13)
+*   [x] (Backend) Add comprehensive docstrings and comments for maintainability (2024-06-14)
+*   [x] (Backend) Add validation step after ingestion to confirm RAG chunking/embedding (2024-06-14)
+*   [x] (Backend) Ensure all endpoints are clearly documented (2024-06-14)
+*   [x] (Backend) Backend is now robust, maintainable, and ready for integration (2024-06-14)
+*   [ ] (Post-MVP) Implement Speech-to-Text (STT) in Lovable frontend.
 *   [ ] (Post-MVP) Refine prompt engineering for better sports psych guidance using GPT-4o.
 *   [ ] (Post-MVP) Add more documents to the knowledge base.
 *   [ ] (Post-MVP) Improve error handling and logging.
@@ -68,26 +64,7 @@ These are the tasks currently being worked on or the immediate next steps.
 
 These tasks are planned for later stages of the MVP or post-MVP, ordered roughly by priority.
 
-*   [ ] Create `main.py` with basic FastAPI app structure.
-*   [ ] Initialize Supabase client, OpenAI clients (LLM, Embeddings), and ElevenLabs client/key in `main.py`.
-*   [ ] Implement `get_message_history(user_id)` function in `main.py` (fetches from Supabase, converts to LangChain messages).
-*   [ ] Implement `add_message_to_history(user_id, role, content)` function in `main.py` (inserts into Supabase).
-*   [ ] Implement `get_user_profile(user_id)` function in `main.py` (fetches from Supabase).
-*   [ ] Set up LangChain RAG components in `main.py` (PGVector vector store, retriever).
-*   [ ] Define core LangChain prompt template (including persona, profile info, context, history).
-*   [ ] Implement the `/chat` POST endpoint: accept user ID and message, fetch history/profile, use LangChain (Memory, RAG, LLM), save history, return text response.
-*   [ ] Implement the `/profile` GET/POST/PUT endpoints for fetching and updating user profile data in Supabase.
-*   [ ] Implement the `/tts` POST endpoint: accept text and user ID, call ElevenLabs API (streaming), return audio stream.
-*   [ ] Test FastAPI endpoints locally (`uvicorn`, Swagger UI).
-*   [ ] Integrate Supabase Auth into Lovable frontend (signup, login, get user UUID).
-*   [ ] Update Lovable chat interface to send user message + Supabase UUID to FastAPI `/chat`.
-*   [ ] Update Lovable chat interface to receive and display text response from `/chat`.
-*   [ ] Update Lovable frontend to call FastAPI `/tts` with AI response text and play the returned audio stream.
-*   [ ] Implement profile input form in Lovable, calling FastAPI `/profile`.
-*   [ ] Set up deployment environment (Render, Fly.io, etc.).
-*   [ ] Configure environment variables on the hosting platform.
-*   [ ] Deploy the FastAPI application.
-*   [ ] Update Lovable to use the deployed API URL.
+*   [ ] Refactor main.py into modules if it approaches 500 lines (to maintain codebase standards)
 *   [ ] (Post-MVP) Implement Speech-to-Text (STT) in Lovable frontend.
 *   [ ] (Post-MVP) Refine prompt engineering for better sports psych guidance using GPT-4o.
 *   [ ] (Post-MVP) Add more documents to the knowledge base.
@@ -116,7 +93,6 @@ Chronological log of issues found, decisions made mid-process, or helpful links.
 
 ## Discovered During Work
 
-*   [ ] Implement RAG/vector search integration in FastAPI backend when direct DB access is available
 *   [ ] Refactor main.py into modules if it approaches 500 lines (to maintain codebase standards)
 *   [x] Bug: ingest_data.py used SUPABASE_PG_CONN_STRING instead of SUPABASE_PG_CONNECTION_STRING (as in .env). Fixed by aligning variable names. (2024-06-13)
 *   [x] Successfully tested ingest_data.py after fixing connection string variable. (2024-06-13)

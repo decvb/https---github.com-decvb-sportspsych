@@ -123,6 +123,25 @@ def main():
     vectorstore.add_texts(all_chunks, metadatas=metadatas)
     print("Ingestion complete.")
 
+    # Validation: Retrieve context for a sample query
+    try:
+        print("\n[Validation] Sample RAG retrieval for query: 'focus under pressure'")
+        from langchain_openai import OpenAIEmbeddings
+        from langchain_community.vectorstores.pgvector import PGVector as CommunityPGVector
+        embeddings = OpenAIEmbeddings(openai_api_key=OPENAI_API_KEY)
+        vectorstore = CommunityPGVector(
+            connection_string=connection_string,
+            collection_name="sports_psychology_docs",
+            embedding_function=embeddings,
+        )
+        docs = vectorstore.similarity_search("focus under pressure", k=2)
+        for i, doc in enumerate(docs):
+            print(f"--- Chunk {i+1} ---\n{doc.page_content}\n")
+        if not docs:
+            print("[warn] No relevant chunks found for validation query.")
+    except Exception as e:
+        print(f"[error] Validation failed: {e}")
+
 
 if __name__ == "__main__":
     main() 

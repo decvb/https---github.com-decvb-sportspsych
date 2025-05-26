@@ -1,0 +1,25 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.13.3, pytest-8.3.5, pluggy-1.6.0 -- /Users/declantiso/Cursor/langchain test/.venv/bin/python3.13
+cachedir: .pytest_cache
+rootdir: /Users/declantiso/Cursor
+plugins: anyio-4.9.0, langsmith-0.3.42, mock-3.14.0
+collecting ... collected 16 items
+
+tests/test_chat.py::test_chat_expected_use PASSED                        [  6%]
+tests/test_chat.py::test_chat_empty_message PASSED                       [ 12%]
+tests/test_chat.py::test_chat_invalid_user PASSED                        [ 18%]
+tests/test_chat.py::test_chat_missing_message PASSED                     [ 25%]
+tests/test_chat.py::test_get_profile_expected_use PASSED                 [ 31%]
+tests/test_chat.py::test_get_profile_invalid_user PASSED                 [ 37%]
+tests/test_chat.py::test_post_profile_expected_use PASSED                [ 43%]
+tests/test_chat.py::test_post_profile_missing_id PASSED                  [ 50%]
+tests/test_chat.py::test_put_profile_expected_use PASSED                 [ 56%]
+tests/test_chat.py::test_put_profile_missing_id PASSED                   [ 62%]
+tests/test_chat.py::test_tts_expected_use PASSED                         [ 68%]
+tests/test_chat.py::test_tts_empty_text PASSED                           [ 75%]
+tests/test_chat.py::test_tts_missing_text PASSED                         [ 81%]
+tests/test_chat.py::test_retrieve_context_expected_use PASSED            [ 87%]
+tests/test_chat.py::test_retrieve_context_no_results PASSED              [ 93%]
+tests/test_chat.py::test_retrieve_context_failure PASSED                 [100%]
+
+======================= 16 passed, 7 warnings in 12.67s ========================
